@@ -30,6 +30,7 @@ public class MainActivity extends Activity {
         addressBar = (EditText) findViewById(R.id.address_bar);
         showList = (TextView) findViewById(R.id.show_list);
         showList.setText("");
+        communicator = new BluetoothComm();
         connect = (Button) findViewById(R.id.connect);
         connect.setOnClickListener(new View.OnClickListener() {
             @Override
