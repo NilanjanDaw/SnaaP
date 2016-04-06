@@ -80,15 +80,19 @@ public class MainActivity extends Activity {
         protected BluetoothSocket doInBackground(String... params) {
 
             String address = params[0];
-            communicator.connect(address);
-            return null;
+            BluetoothSocket socket;
+            socket = communicator.connect(address);
+            return socket;
         }
 
         @Override
         protected void onPostExecute(BluetoothSocket bluetoothSocket) {
             super.onPostExecute(bluetoothSocket);
             socket = bluetoothSocket;
-            showToast("Connection Successful");
+            if (socket != null)
+                showToast("Connection Successful");
+            else
+                showToast("Connection Failed");
             startCommunication();
         }
     }
@@ -120,12 +124,13 @@ public class MainActivity extends Activity {
                     byte msg[] = message.getBytes();
                     communicator.sendData(msg, params[0].getOutputStream());
                     //message = "";
+                    Log.d("MESSGAE",message);
                     Thread.sleep(50);
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
-            return null;
+            return "Execution Done";
         }
 
         @Override

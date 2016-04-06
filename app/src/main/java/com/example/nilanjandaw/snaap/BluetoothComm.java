@@ -45,21 +45,22 @@ public class BluetoothComm {
         }
         if(!foundDevice){
             Log.v(TAG, "Bluetooth Band not Paired");
+        } else {
+            try {
+                mBluetoothAdapter.cancelDiscovery();
+                socket.connect();
+                if (socket == null)
+                    Log.d("BTStream", "null socket");
+                else
+                    Log.d(TAG, socket.toString());
+                return socket;
+            } catch (IOException e) {
+                Log.d("Connection Status", "Failed : " + e.getMessage());
+                e.printStackTrace();
+
+            }
         }
-        try {
-            mBluetoothAdapter.cancelDiscovery();
-            socket.connect();
-            if(socket==null)
-                Log.d("BTStream", "null socket");
-            else
-                Log.d(TAG, socket.toString());
-            return socket;
-        }
-        catch (IOException e) {
-            Log.d("Connection Status", "Failed : " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
+        return null;
     }
 
     //properly closing the socket and updating the status
