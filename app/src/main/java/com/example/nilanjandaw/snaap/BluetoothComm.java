@@ -80,7 +80,7 @@ public class BluetoothComm {
     public void sendData(byte[] msg,OutputStream outputStream){
         try {
             if(outputStream != null) {
-                outputStream.write(msg);
+                outputStream.write(msg); 
                 Log.d("BluetoothSend", "true");
                 outputStream.flush();
             }
