@@ -2,6 +2,7 @@ package com.example.nilanjandaw.snaap;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothSocket;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -26,11 +27,13 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Button connect;
+        Button lost_id;
         addressBar = (EditText) findViewById(R.id.address_bar);
         showList = (TextView) findViewById(R.id.show_list);
         showList.setText("");
         communicator = new BluetoothComm();
         connect = (Button) findViewById(R.id.connect);
+        lost_id = (Button) findViewById(R.id.lost_id);
         connect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -40,6 +43,15 @@ public class MainActivity extends Activity {
                 new Connect().execute(address);
             }
         });
+
+        lost_id.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(getApplicationContext(),Lost_Tag.class);
+                startActivity(i);
+            }
+        });
+
     }
 
     private void startCommunication() {
