@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.util.Log;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -28,7 +29,6 @@ public class BluetoothComm {
     public BluetoothSocket connect(String bluetoothAddress) {
         Set<BluetoothDevice> setpairedDevices = mBluetoothAdapter.getBondedDevices();
         BluetoothDevice[] pairedDevices = setpairedDevices.toArray(new BluetoothDevice[setpairedDevices.size()]);
-
         boolean foundDevice = false;
         for (BluetoothDevice pairedDevice : pairedDevices) {
             if (pairedDevice.getName().contains(bluetoothAddress.trim())) {

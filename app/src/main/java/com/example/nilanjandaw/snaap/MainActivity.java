@@ -1,6 +1,7 @@
 package com.example.nilanjandaw.snaap;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothSocket;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -21,6 +22,9 @@ public class MainActivity extends Activity {
     private TextView showList;
     private BluetoothComm communicator;
     private BluetoothSocket socket = null;
+    public static final int REQUEST_ENABLE_BT = 4;
+    private ReceiverTask receiverTask;
+    private SenderTask senderTask;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,7 +33,6 @@ public class MainActivity extends Activity {
         addressBar = (EditText) findViewById(R.id.address_bar);
         showList = (TextView) findViewById(R.id.show_list);
         showList.setText("");
-        communicator = new BluetoothComm();
         connect = (Button) findViewById(R.id.connect);
         connect.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -42,9 +45,32 @@ public class MainActivity extends Activity {
         });
     }
 
+    @Override
+    public void onResume(){
+        super.onResume();
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter == null) {
+            // Device does not support Bluetooth
+            Log.d("MainActivity", "Device does not support Bluetooth");
+        }
+        else{
+            //Device supports BT
+            if (!mBluetoothAdapter.isEnabled()){
+                //if Bluetooth not activated, then request it
+                showToast("Please turn your bluetooth ON");
+            }
+            else{
+                //BT activated, then initiate the BtInterface object to handle all BT communication
+                communicator = new BluetoothComm();
+            }
+        }
+    }
+
     private void startCommunication() {
-        new ReceiverTask().execute(socket);
-        new SenderTask().execute(socket);
+        receiverTask = new ReceiverTask();
+        receiverTask.execute(socket);
+        senderTask = new SenderTask();
+        senderTask.execute(socket);
 
     }
 
@@ -71,6 +97,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onStop() {
         super.onStop();
+        senderTask.cancel(true);
+        receiverTask.cancel(true);
         communicator.close();
     }
 
@@ -109,6 +137,8 @@ public class MainActivity extends Activity {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                if (receiverTask.isCancelled())
+                    break;
             }
             return null;
         }
@@ -124,8 +154,10 @@ public class MainActivity extends Activity {
                     byte msg[] = message.getBytes();
                     communicator.sendData(msg, params[0].getOutputStream());
                     //message = "";
-                    Log.d("MESSGAE",message);
+                    Log.d("message", message);
                     Thread.sleep(50);
+                    if (senderTask.isCancelled())
+                        break;
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
