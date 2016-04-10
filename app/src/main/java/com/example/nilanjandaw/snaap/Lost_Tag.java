@@ -33,42 +33,31 @@ public class Lost_Tag extends Activity {
     TextView tvIsConnected;
     EditText write_tagid;
     Button upload_to_server;
-//    String tag_id_string = "";
     TagDetails tag_details;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lost__tag);
-
-        // get reference to the views
         tvIsConnected = (TextView) findViewById(R.id.connected);
         write_tagid = (EditText) findViewById(R.id.write_tagid);
         upload_to_server = (Button) findViewById(R.id.upload_to_server);
-
-         //check if you are connected or not
-        if(isConnected()){
+        if(isConnected()){                                                      //check if you are connected or not
             tvIsConnected.setBackgroundColor(0xFF00CC00);
             tvIsConnected.setText("You are connected");
         }
         else{
             tvIsConnected.setText("You are NOT connected");
         }
-
-        // add click listener to Button "POST"
-        upload_to_server.setOnClickListener(new View.OnClickListener() {
+        upload_to_server.setOnClickListener(new View.OnClickListener() {        // add click listener to Button "POST"
             @Override
             public void onClick(View v) {
                 if(!validate()) {
                     Toast.makeText(getBaseContext(), "Enter some data!", Toast.LENGTH_LONG).show();
                 }else {
-
-                    // call AsynTask to perform network operation on separate thread
-                    new HttpAsyncTask().execute("http://hmkcode.appspot.com/jsonservlet", write_tagid.getText().toString());
+                    new HttpAsyncTask().execute("http://hmkcode.appspot.com/jsonservlet", write_tagid.getText().toString());    // call AsynTask to perform network operation on separate thread
                 }
-
             }
         });
-
     }
 
     public static String POST(String url, TagDetails tag_details){
@@ -76,45 +65,19 @@ public class Lost_Tag extends Activity {
         String result = "";
         try {
 
-            // 1. create HttpClient
-            HttpClient httpclient = new DefaultHttpClient();
-
-            // 2. make POST request to the given URL
-            HttpPost httpPost = new HttpPost(url);
-
+            HttpClient httpclient = new DefaultHttpClient();        // create HttpClient
+            HttpPost httpPost = new HttpPost(url);                  // make POST request to the given URL
             String json = "";
-
-            // 3. build jsonObject
-            JSONObject jsonObject = new JSONObject();
+            JSONObject jsonObject = new JSONObject();               // build jsonObject
             jsonObject.accumulate("name", tag_details.getTag_id());
-//            jsonObject.accumulate("country", person.getCountry());
-//            jsonObject.accumulate("twitter", person.getTwitter());
-
-            // 4. convert JSONObject to JSON to String
-            json = jsonObject.toString();
-
-            // ** Alternative way to convert Person object to JSON string usin Jackson Lib
-            // ObjectMapper mapper = new ObjectMapper();
-            // json = mapper.writeValueAsString(person);
-
-            // 5. set json to StringEntity
-            StringEntity se = new StringEntity(json);
-
-            // 6. set httpPost Entity
-            httpPost.setEntity(se);
-
-            // 7. Set some headers to inform server about the type of the content
-            httpPost.setHeader("Accept", "application/json");
+            json = jsonObject.toString();                           // convert JSONObject to JSON to String
+            StringEntity se = new StringEntity(json);               // set json to StringEntity
+            httpPost.setEntity(se);                                 // set httpPost Entity
+            httpPost.setHeader("Accept", "application/json");       // Set some headers to inform server about the type of the content
             httpPost.setHeader("Content-type", "application/json");
-
-            // 8. Execute POST request to the given URL
-            HttpResponse httpResponse = httpclient.execute(httpPost);
-
-            // 9. receive response as inputStream
-            inputStream = httpResponse.getEntity().getContent();
-
-            // 10. convert inputstream to string
-            if(inputStream != null)
+            HttpResponse httpResponse = httpclient.execute(httpPost); // Execute POST request to the given URL
+            inputStream = httpResponse.getEntity().getContent();      // receive response as inputStream
+            if(inputStream != null)                                   // convert inputstream to string
                 result = convertInputStreamToString(inputStream);
             else
                 result = "Did not work!";
@@ -122,10 +85,11 @@ public class Lost_Tag extends Activity {
         } catch (Exception e) {
             Log.d("InputStream", e.getLocalizedMessage());
         }
-
-        // 11. return result
-        return result;
+        return result;                                                 // return result
     }
+
+
+
 
     public boolean isConnected(){
         ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Activity.CONNECTIVITY_SERVICE);
@@ -142,13 +106,10 @@ public class Lost_Tag extends Activity {
 
             tag_details = new TagDetails();
             tag_details.setTag_id(urls[1]);
-//            person.setCountry(etCountry.getText().toString());
-//            person.setTwitter(etTwitter.getText().toString());
-
             return POST(urls[0],tag_details);
         }
-        // onPostExecute displays the results of the AsyncTask.
-        @Override
+
+        @Override                    // onPostExecute displays the results of the AsyncTask.
         protected void onPostExecute(String result) {
             Toast.makeText(getBaseContext(), "Data Sent!", Toast.LENGTH_LONG).show();
         }
@@ -157,11 +118,7 @@ public class Lost_Tag extends Activity {
     private boolean validate(){
         if(write_tagid.getText().toString().trim().equals(""))
             return false;
-//        else if(etCountry.getText().toString().trim().equals(""))
-//            return false;
-//        else if(etTwitter.getText().toString().trim().equals(""))
-//            return false;
-//        else
+            else
             return true;
     }
     private static String convertInputStreamToString(InputStream inputStream) throws IOException{
@@ -173,6 +130,5 @@ public class Lost_Tag extends Activity {
 
         inputStream.close();
         return result;
-
     }
 }
