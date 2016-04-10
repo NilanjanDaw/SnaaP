@@ -54,7 +54,7 @@ public class Lost_Tag extends Activity {
                 if(!validate()) {
                     Toast.makeText(getBaseContext(), "Enter some data!", Toast.LENGTH_LONG).show();
                 }else {
-                    new HttpAsyncTask().execute("http://hmkcode.appspot.com/jsonservlet", write_tagid.getText().toString());    // call AsynTask to perform network operation on separate thread
+                    new HttpAsyncTask().execute("http://192.168.1.4:3000/api/Bands", write_tagid.getText().toString());    // call AsynTask to perform network operation on separate thread
                 }
             }
         });

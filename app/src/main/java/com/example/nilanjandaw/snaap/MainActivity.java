@@ -1,5 +1,7 @@
 package com.example.nilanjandaw.snaap;
 
+import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
@@ -7,6 +9,7 @@ import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -33,13 +36,21 @@ public class MainActivity extends Activity {
     JsonUploader jsonUploader;
     GPSTracker gps;
 //    TimeStamp timestamp;
-    @Override
+    //@TargetApi(Build.VERSION_CODES.MNC)
+    //@Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Button connect;
         Button lost_id;
-        addressBar = (EditText) findViewById(R.id.address_bar);
+        //final String[] LOCATION_PERMS={
+          //      Manifest.permission.ACCESS_FINE_LOCATION
+        //};
+        //requestPermissions(LOCATION_PERMS, 10);
+
+
+                addressBar = (EditText) findViewById(R.id.address_bar);
         showList = (TextView) findViewById(R.id.show_list);
         showList.setText("");
         communicator = new BluetoothComm();
@@ -90,7 +101,8 @@ public class MainActivity extends Activity {
         if(!jsonUploader.validate()) {
             Toast.makeText(getBaseContext(), "No Data Found!!", Toast.LENGTH_LONG).show();
         }else {
-            jsonUploader.new HttpAsyncTask().execute("http://hmkcode.appspot.com/jsonservlet", fields_details.getLongitude().toString(), fields_details.getLatitude(), fields_details.getMacId(), fields_details.getTimestamp());    // call AsynTask to perform network operation on separate thread
+            Log.d("POST",fields_details.getMacId());
+            jsonUploader.new HttpAsyncTask().execute("http://192.168.1.4:3000/api/Bands", fields_details.getLongitude().toString(), fields_details.getLatitude(), fields_details.getMacId(), fields_details.getTimestamp());    // call AsynTask to perform network operation on separate thread
 
         }
 

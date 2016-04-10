@@ -35,20 +35,21 @@ public class JsonUploader extends Fields_Details {
 
 
         try {
-            fields_details = new Fields_Details();
+            //fields = new Fields_Details();
             HttpClient httpclient = new DefaultHttpClient();        // create HttpClient
             HttpPost httpPost = new HttpPost(url);                  // make POST request to the given URL
             String json = "";
             JSONObject jsonObject = new JSONObject();               // build jsonObject
-            jsonObject.accumulate("longitude", fields_details.getLongitude());
-            jsonObject.accumulate("latitude", fields_details.getLatitude());
-            jsonObject.accumulate("timestamp", fields_details.getTimestamp());
-            jsonObject.accumulate("macid", fields_details.getMacId());
+            jsonObject.accumulate("longitude", fields.getLongitude());
+            jsonObject.accumulate("latitude", fields.getLatitude());
+            jsonObject.accumulate("timestamp", fields.getTimestamp());
+            jsonObject.accumulate("macid", fields.getMacId());
             json = jsonObject.toString();                           // convert JSONObject to JSON to String
             StringEntity se = new StringEntity(json);               // set json to StringEntity
             httpPost.setEntity(se);                                 // set httpPost Entity
             httpPost.setHeader("Accept", "application/json");       // Set some headers to inform server about the type of the content
             httpPost.setHeader("Content-type", "application/json");
+            Log.d("POSTING to Server",jsonObject.getString("latitude"));
             HttpResponse httpResponse = httpclient.execute(httpPost); // Execute POST request to the given URL
             inputStream = httpResponse.getEntity().getContent();      // receive response as inputStream
             if(inputStream != null)                                   // convert inputstream to string
@@ -82,6 +83,8 @@ public class JsonUploader extends Fields_Details {
             fields_details.setLongitude(urls[1]);
             fields_details.setLatitude(urls[2]);
             fields_details.setMacId(urls[3]);
+            //Log.d("URL:", urls[3]+fields_details.setMacId(urls[3]));
+
             fields_details.setTimestamp(urls[4]);
             return POST(urls[0],fields_details);
         }
