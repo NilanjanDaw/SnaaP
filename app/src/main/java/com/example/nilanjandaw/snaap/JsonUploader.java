@@ -7,6 +7,8 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -22,38 +24,30 @@ import java.io.InputStreamReader;
 /**
  * Created by Aishwarya Sarkar on 4/10/2016.
  */
-public class JsonUploader extends Fields_Details {
-//    private static Fields_Details field_details;
-    //    TagDetails tag_details;
-    public String fields;
-    static Fields_Details fields_details;
+public class JsonUploader {
 
-
-    public static String POST(String url, Fields_Details fields){
+    public static String POST(String url, Packet packet){
         InputStream inputStream = null;
         String result = "";
 
 
         try {
-            //fields = new Fields_Details();
             HttpClient httpclient = new DefaultHttpClient();        // create HttpClient
             HttpPost httpPost = new HttpPost(url);                  // make POST request to the given URL
             String json = "";
-            JSONObject jsonObject = new JSONObject();               // build jsonObject
-            jsonObject.accumulate("longitude", fields.getLongitude());
-            jsonObject.accumulate("latitude", fields.getLatitude());
-            jsonObject.accumulate("timestamp", fields.getTimestamp());
-            jsonObject.accumulate("macid", fields.getMacId());
-            json = jsonObject.toString();                           // convert JSONObject to JSON to String
+            ObjectMapper mapper = new ObjectMapper();               //Using JackSon library
+            json = mapper.writeValueAsString(packet);               // Covert POJO to JSONString
             StringEntity se = new StringEntity(json);               // set json to StringEntity
             httpPost.setEntity(se);                                 // set httpPost Entity
             httpPost.setHeader("Accept", "application/json");       // Set some headers to inform server about the type of the content
             httpPost.setHeader("Content-type", "application/json");
-            Log.d("POSTING to Server",jsonObject.getString("latitude"));
+            Log.d("POSTING to Server",json);
             HttpResponse httpResponse = httpclient.execute(httpPost); // Execute POST request to the given URL
             inputStream = httpResponse.getEntity().getContent();      // receive response as inputStream
-            if(inputStream != null)                                   // convert inputstream to string
+            if(inputStream != null) {                                 // convert inputstream to string
                 result = convertInputStreamToString(inputStream);
+                Log.d("Server Response", result);
+            }
             else
                 result = "Did not work!";
 
@@ -77,16 +71,18 @@ public class JsonUploader extends Fields_Details {
 
     public class HttpAsyncTask extends AsyncTask<String, Void, String> {
         @Override
-        protected String doInBackground(String... urls) {
-            fields_details = new Fields_Details();
-//            Fields_Details = new Fields_Details();
-            fields_details.setLongitude(urls[1]);
-            fields_details.setLatitude(urls[2]);
-            fields_details.setMacId(urls[3]);
-            //Log.d("URL:", urls[3]+fields_details.setMacId(urls[3]));
+        protected String doInBackground(String... params) {
+            Packet packet = new Packet();
+            packet.setBandID(params[1]);
+            packet.setMacID(params[2]);
+            packet.setTagID(params[3]);
+            packet.setTimeStamp(params[4]);
+            Packet.Coordinate coordinate = packet.new Coordinate();
+            coordinate.latitude = Double.parseDouble(params[5]);
+            coordinate.longitude = Double.parseDouble(params[6]);
+            packet.setCoordinate(coordinate);
 
-            fields_details.setTimestamp(urls[4]);
-            return POST(urls[0],fields_details);
+            return POST(params[0],packet);
         }
 
         @Override                    // onPostExecute displays the results of the AsyncTask.

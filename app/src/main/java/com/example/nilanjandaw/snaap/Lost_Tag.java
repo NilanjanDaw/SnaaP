@@ -54,7 +54,16 @@ public class Lost_Tag extends Activity {
                 if(!validate()) {
                     Toast.makeText(getBaseContext(), "Enter some data!", Toast.LENGTH_LONG).show();
                 }else {
-                    new HttpAsyncTask().execute("http://192.168.1.4:3000/api/Bands", write_tagid.getText().toString());    // call AsynTask to perform network operation on separate thread
+                    Helper help = new Helper(getBaseContext());
+                    // call AsynTask to perform network operation on separate thread
+                    new JsonUploader().new HttpAsyncTask().execute("http://192.168.1.4:3000/api/Bands",
+                            "Band0HC-05",
+                            help.getMacID(),
+                            write_tagid.getText().toString(),
+                            help.getTimeStamp(),
+                            Double.toString(help.getLatitude()),
+                            Double.toString(help.getLongitude())
+                    );
                 }
             }
         });
@@ -88,16 +97,10 @@ public class Lost_Tag extends Activity {
         return result;                                                 // return result
     }
 
-
-
-
     public boolean isConnected(){
         ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Activity.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected())
-            return true;
-        else
-            return false;
+        return networkInfo != null && networkInfo.isConnected();
     }
 
     private class HttpAsyncTask extends AsyncTask<String, Void, String> {
@@ -116,10 +119,7 @@ public class Lost_Tag extends Activity {
     }
 
     private boolean validate(){
-        if(write_tagid.getText().toString().trim().equals(""))
-            return false;
-            else
-            return true;
+        return !write_tagid.getText().toString().trim().equals("");
     }
     private static String convertInputStreamToString(InputStream inputStream) throws IOException{
         BufferedReader bufferedReader = new BufferedReader( new InputStreamReader(inputStream));

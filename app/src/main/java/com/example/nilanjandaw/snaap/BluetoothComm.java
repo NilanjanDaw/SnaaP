@@ -27,8 +27,8 @@ public class BluetoothComm {
 
     //when called from the main activity, it sets the connection with the remote device
     public BluetoothSocket connect(String bluetoothAddress) {
-        Set<BluetoothDevice> setpairedDevices = mBluetoothAdapter.getBondedDevices();
-        BluetoothDevice[] pairedDevices = setpairedDevices.toArray(new BluetoothDevice[setpairedDevices.size()]);
+        Set<BluetoothDevice> setPairedDevices = mBluetoothAdapter.getBondedDevices();
+        BluetoothDevice[] pairedDevices = setPairedDevices.toArray(new BluetoothDevice[setPairedDevices.size()]);
         boolean foundDevice = false;
         for (BluetoothDevice pairedDevice : pairedDevices) {
             if (pairedDevice.getName().contains(bluetoothAddress.trim())) {
@@ -87,7 +87,7 @@ public class BluetoothComm {
             else
                 Log.d("BTStream", "sendStream NULL");
         } catch (Exception e) {
-            if(outputStream==null)
+            if(outputStream == null)
                 Log.d("BTStream", "sendStream NULL");
             e.printStackTrace();
         }
@@ -105,7 +105,8 @@ public class BluetoothComm {
                         receivedData = "";
 
                     }
-                }
+                } else
+                    Log.d("receiveData", "No data");
             }
             catch (IOException e) {
                 e.printStackTrace();
