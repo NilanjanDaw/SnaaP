@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Objects;
+import java.util.concurrent.ThreadFactory;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -43,8 +44,8 @@ public class MainActivity extends Activity {
     private BluetoothComm communicator;
     private BluetoothSocket socket = null;
     public static final int REQUEST_ENABLE_BT = 4;
-    private ReceiverTask receiverTask;
-    private SenderTask senderTask;
+    private ReceiverThread receiverThread;
+    private Thread senderThread;
     public String timestamp;
     public String mac_id;
     JsonUploader jsonUploader;
@@ -156,10 +157,10 @@ public class MainActivity extends Activity {
     }
 
     private void startCommunication() {
-        receiverTask = new ReceiverTask();
-        receiverTask.execute(socket);
-        senderTask = new SenderTask();
-        senderTask.execute(socket);
+        senderThread = new SenderThread(socket);
+        senderThread.start();
+        receiverThread = new ReceiverThread(socket);
+        receiverThread.start();
         connectionStatus = 1;
 
     }
@@ -185,12 +186,12 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-        if (senderTask != null)
-            senderTask.cancel(true);
-        if (receiverTask != null)
-            receiverTask.cancel(true);
+    protected void onPause() {
+        super.onPause();
+        if (senderThread != null)
+            senderThread.interrupt();
+        if (receiverThread != null)
+            receiverThread.interrupt();
         if (communicator != null)
             communicator.close();
     }
@@ -220,26 +221,33 @@ public class MainActivity extends Activity {
         }
     }
 
-    public class ReceiverTask extends AsyncTask<BluetoothSocket, Void, String> {
+    public class ReceiverThread extends Thread {
 
+        BluetoothSocket socket;
+        public ReceiverThread(BluetoothSocket socket) {
+            this.socket = socket;
+        }
         @Override
-        protected String doInBackground(BluetoothSocket... params) {
+        public void run() {
+            super.run();
+            Log.d("ReceiverThread", socket.toString());
             while (socket != null) {
-                String stringReceived = communicator.receiveData(params[0]);
-                parseData(stringReceived);
+                String stringReceived = communicator.receiveData(socket);
+                // parseData(stringReceived);
                 Log.d("receiverTask", stringReceived);
                 if (!Objects.equals(stringReceived, ""))
                     semaphore = 0;
                 try {
-                    Thread.sleep(50);
+                    Thread.sleep(500);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                if (receiverTask.isCancelled())
+                if (Thread.interrupted())
                     break;
             }
-            return null;
+
         }
+
     }
 
     private void parseData(String stringReceived) {
@@ -263,34 +271,34 @@ public class MainActivity extends Activity {
         }
     }
 
-    public class SenderTask extends AsyncTask<BluetoothSocket, Void, String> {
+    public class SenderThread extends Thread {
+
+        BluetoothSocket socket;
+        public SenderThread(BluetoothSocket socket) {
+            this.socket = socket;
+        }
 
         @Override
-        protected String doInBackground(BluetoothSocket... params) {
+        public void run() {
+
+            Log.d("SenderTask", socket.toString() + semaphore + " " + addressString);
             try {
-                while (params[0] != null && !addressString.equalsIgnoreCase("")) {
+                while (socket != null && !addressString.equalsIgnoreCase("")) {
                     if (semaphore == 0) {
-                        addressString = "\\SOM" + addressString + "\\EOM";
+                        addressString = addressString;
                         byte msg[] = addressString.getBytes();
-                        communicator.sendData(msg, params[0].getOutputStream());
+                        communicator.sendData(msg, socket.getOutputStream());
                         //message = "";
-                        Log.d("message", addressString);
-                        semaphore = 1;
+                        Log.d("Send message", addressString);
+                        //semaphore = 1;
                     }
                     Thread.sleep(1000);
-                    if (senderTask.isCancelled())
+                    if (Thread.interrupted())
                         break;
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
-            return addressString;
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            Log.d("Data Sent", s);
         }
     }
 

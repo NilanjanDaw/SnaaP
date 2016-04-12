@@ -7,6 +7,7 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Set;
@@ -79,6 +80,7 @@ public class BluetoothComm {
 
     public void sendData(byte[] msg,OutputStream outputStream){
         try {
+
             if(outputStream != null) {
                 outputStream.write(msg); 
                 Log.d("BluetoothSend", "true");
@@ -97,16 +99,11 @@ public class BluetoothComm {
     public String receiveData(BluetoothSocket socket) {
         String receivedData = "";
             try {
-                receiveReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                if(socket.getInputStream().available() > 0) {
-                    receivedData = receiveReader.readLine();
-                    if (receivedData != null && !receivedData.equalsIgnoreCase("")) {
-                        Log.v(TAG, receivedData);
-                        receivedData = "";
-
-                    }
-                } else
-                    Log.d("receiveData", "No data");
+                InputStream inputStream = socket.getInputStream();
+                receiveReader = new BufferedReader(new InputStreamReader(inputStream));
+                while(inputStream.available() > 0) {
+                    receivedData += receiveReader.readLine();
+                }
             }
             catch (IOException e) {
                 e.printStackTrace();
