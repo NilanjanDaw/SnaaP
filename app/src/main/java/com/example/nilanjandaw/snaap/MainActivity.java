@@ -12,6 +12,8 @@ import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -41,6 +43,7 @@ public class MainActivity extends Activity {
     @Bind(R.id.connect) Button connect;
     @Bind(R.id.lost_id) Button lost_id;
     @Bind(R.id.tag_button) Button tagButton;
+
     private BluetoothComm communicator;
     private BluetoothSocket socket = null;
     public static final int REQUEST_ENABLE_BT = 4;
@@ -52,7 +55,45 @@ public class MainActivity extends Activity {
     public static String addressString = "";
     public static int connectionStatus = -1, semaphore = 0;
     public static boolean lostRaider = false;
-//    TimeStamp timestamp;
+
+
+    public static class MessageHandler extends Handler {
+
+        public void handleMessage(Message message) {
+            String data = message.getData().getString("message");
+            if (data != null) {
+                Log.d("Message(Handler)", data);
+                parseData(data);
+            }
+        }
+
+        private void parseData(String stringReceived) {
+            try {
+                int tagStatusReply = Integer.parseInt(stringReceived);
+                for (int i = 0; i < stringReceived.length(); i++) {
+                    int tagStat = tagStatusReply & (0b1 << i);
+                    if (tagStat > 0)
+                        Log.d("Tag id", (stringReceived.length() - i) + "Found");
+                    else {
+                        Log.e("WARNING", "Tag " + (stringReceived.length() - i) + " lost");
+                        //showToast("WARNING " + "Tag " + (stringReceived.length() - i) + "lost");
+                    }
+
+                }
+
+                if (lostRaider) {
+                    int lostTagStatus = tagStatusReply & (0b1);
+                    if (lostTagStatus > 0)
+                        Log.d("Lost Tag", "Karan Arjun Mil Gaya");
+                }
+            } catch (NumberFormatException e) {
+                e.getMessage();
+            }
+        }
+
+    }
+
+    Handler handler = new MessageHandler();
 
     @TargetApi(Build.VERSION_CODES.M)
     @Override
@@ -221,6 +262,9 @@ public class MainActivity extends Activity {
         }
     }
 
+    /**
+     * AsyncTask changed to Thread to overcome single Thread-pool problem
+     */
     public class ReceiverThread extends Thread {
 
         BluetoothSocket socket;
@@ -232,8 +276,15 @@ public class MainActivity extends Activity {
             super.run();
             Log.d("ReceiverThread", socket.toString());
             while (socket != null) {
+                if (Thread.interrupted())
+                    break;
                 String stringReceived = communicator.receiveData(socket);
-                // parseData(stringReceived);
+                Message message = handler.obtainMessage();
+                Bundle b = new Bundle();
+                b.putString("message", stringReceived);
+                message.setData(b);
+                handler.sendMessage(message);
+                //parseData(stringReceived);
                 Log.d("receiverTask", stringReceived);
                 if (!Objects.equals(stringReceived, ""))
                     semaphore = 0;
@@ -242,35 +293,16 @@ public class MainActivity extends Activity {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                if (Thread.interrupted())
-                    break;
             }
 
         }
 
     }
 
-    private void parseData(String stringReceived) {
 
-        int tagStatusReply = Integer.parseInt(stringReceived);
-        for (int i = 0; i < stringReceived.length(); i++) {
-            int tagStat = tagStatusReply & (0b1 << i);
-            if (tagStat > 0)
-                Log.d("Tag id", (stringReceived.length() - i) + "Found");
-            else {
-                Log.e("WARNING", "Tag " + (stringReceived.length() - i) + "lost");
-                showToast("WARNING " + "Tag " + (stringReceived.length() - i) + "lost");
-            }
-
-        }
-
-        if (lostRaider) {
-            int lostTagStatus = tagStatusReply & (0b1);
-            if (lostTagStatus > 0)
-                Log.d("Lost Tag", "Karan Arjun Mil Gaya");
-        }
-    }
-
+    /**
+     * AsyncTask changed to Thread to overcome single Thread-pool problem
+     */
     public class SenderThread extends Thread {
 
         BluetoothSocket socket;
@@ -284,17 +316,17 @@ public class MainActivity extends Activity {
             Log.d("SenderTask", socket.toString() + semaphore + " " + addressString);
             try {
                 while (socket != null && !addressString.equalsIgnoreCase("")) {
+                    if (Thread.interrupted())
+                        break;
                     if (semaphore == 0) {
                         addressString = addressString;
                         byte msg[] = addressString.getBytes();
                         communicator.sendData(msg, socket.getOutputStream());
                         //message = "";
                         Log.d("Send message", addressString);
-                        //semaphore = 1;
+                        semaphore = 1;
                     }
                     Thread.sleep(1000);
-                    if (Thread.interrupted())
-                        break;
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
